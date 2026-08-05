@@ -1,3 +1,12 @@
+## [7.2.5](https://github.com/Safe3/uusec-waf/compare/v7.2.5...v7.2.4) (2026-08-05)
+
+### 问题修复
+
+- 修复 nginx CVE-2026-42533 和 CVE-2026-56434 漏洞
+- 社区版最大网站数限制由10调整为16
+
+
+
 ## [7.2.4](https://github.com/Safe3/uusec-waf/compare/v7.2.4...v7.2.3) (2026-06-08)
 
 ### 问题修复
