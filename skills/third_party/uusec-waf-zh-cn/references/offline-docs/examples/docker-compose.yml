@@ -1,0 +1,60 @@
+﻿networks:
+  wafnet:
+    name: wafnet
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - gateway: 172.31.254.1
+        subnet: 172.31.254.0/24
+    driver_opts:
+      com.docker.network.bridge.name: wafnet
+
+services:
+  uuwaf:
+    image: uusec/waf:latest
+    #ulimits:
+    #  nproc: 65535
+    #  nofile:
+    #    soft: 102400
+    #    hard: 102400
+    container_name: uuwaf
+    restart: always
+    network_mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./waf_config:/uuwaf/web/conf
+      - ./waf_acme:/uuwaf/acme
+      - ./waf_logs:/uuwaf/logs
+    environment:
+      - UUWAF_DB_DSN=root:${MYSQL_PASSWORD}@tcp(127.0.0.1:6612)/uuwaf?charset=utf8mb4&parseTime=true&loc=Local
+      #- UUWAF_LANGUAGE=zh
+      #- UUWAF_RESOLVER=resolver 127.0.0.11 valid=30s ipv6=off;
+    depends_on:
+      wafdb:
+        condition: service_healthy
+
+  wafdb:
+    image: mysql:5.7
+    container_name: wafdb
+    restart: always
+    networks:
+      wafnet:
+        ipv4_address: 172.31.254.3
+    ports:
+      - "6612:3306"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./waf_data:/var/lib/mysql
+      #- ./low-memory-my.cnf:/etc/mysql/my.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+    command: ["--max_connections=512"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "-uroot", "-p${MYSQL_PASSWORD}", "ping", "-h", "127.0.0.1", "--silent"]
+      start_period: 3s
+      interval: 5s
+      timeout: 3s
+      retries: 10
+

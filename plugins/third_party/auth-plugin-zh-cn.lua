@@ -1,9 +1,9 @@
 ---
---- Site Authentication Plugin
---- Adds a login verification page for the specified sites
+--- 站点认证插件
+--- 为指定站点添加登录验证页面
 ---
---- Author: MCQSJ(https://github.com/MCQSJ)
---- Updated: 2026/05/31
+--- 作者: MCQSJ(https://github.com/MCQSJ)
+--- 更新日期: 2026/05/31
 ---
 local ngx = ngx
 local ngx_log = ngx.log
@@ -22,62 +22,62 @@ local _M = {
     priority = 50
 }
 
--- <--- Configuration --->
+-- <--- 配置参数 --->
 
--- Site authentication configuration: {domain, username, password, cookie lifetime (seconds)}
--- A cookie lifetime of 0 means a session cookie (invalidated when the browser closes), a positive value means a persistent duration
+-- 站点认证配置：{域名, 用户名, 密码, cookie有效期(秒)}
+-- cookie有效期设为0表示会话cookie（浏览器关闭即失效），设为正数表示持久化时长
 local site_auth_config = {
     -- {"example.com", "admin", "change-this-password", 0},
     -- {"private.example.com", "admin", "change-this-password", 86400},
 }
 
--- IP allowlist (CIDR format): IPs in the allowlist can access without authentication
+-- IP白名单（CIDR格式）：白名单内的IP无需认证即可访问
 local ip_whitelist = {
     -- "192.168.1.0/24",
     -- "10.0.0.0/8",
 }
 
--- API path allowlist: format "domain/path prefix", matching paths require no authentication (e.g. direct image links)
+-- API路径白名单：格式 "域名/路径前缀"，匹配的路径无需认证（如图片直链）
 local api_whitelist = {
     -- "example.com/api/public/",
     -- "static.example.com/assets/",
 }
 
--- Request header allowlist: matching the specified domain, request header and value requires no authentication
--- host supports a concrete domain or "*"; header is the request header name; value is the request header value; case_sensitive controls whether the value is case sensitive
+-- 请求头放行白名单：匹配指定域名、请求头和值后无需认证
+-- host 支持具体域名或 "*"；header 为请求头名称；value 为请求头值；case_sensitive 控制值是否区分大小写
 local header_allowlist = {
     -- { host = "example.com", header = "X-Auth-Token", value = "change-me", case_sensitive = true },
     -- { host = "*", header = "X-Internal-Bypass", value = "change-me", case_sensitive = true },
 }
 
--- Global authentication settings
-local default_session_duration = 7200   -- Default lifetime in session cookie mode, in seconds (2 hours by default)
-local cookie_name = "WAF_AUTH_SESSION"  -- Authentication session cookie name
-local csrf_cookie_name = "WAF_AUTH_CSRF" -- Legacy CSRF cookie name, only used to clear old cookies
-local session_prefix = "sess:"          -- Session storage key prefix
-local max_login_attempts = 5           -- Maximum number of login attempts (the IP is banned beyond this)
-local login_attempt_window = 3600      -- Statistics window for failed logins, in seconds (1 hour by default)
-local login_ban_duration = 600         -- Ban duration for failed logins, in seconds (10 minutes by default)
-local renew_threshold = 0.3            -- Session renewal threshold (remaining lifetime ratio; 0.3 means renew when 30% is left)
+-- 全局认证设置
+local default_session_duration = 7200   -- 会话cookie模式下的默认有效期，单位秒（默认2小时）
+local cookie_name = "WAF_AUTH_SESSION"  -- 认证会话Cookie名称
+local csrf_cookie_name = "WAF_AUTH_CSRF" -- 历史CSRF Cookie名称，仅用于清理旧Cookie
+local session_prefix = "sess:"          -- 会话存储键前缀
+local max_login_attempts = 5           -- 最大登录尝试次数（超过后封禁IP）
+local login_attempt_window = 3600      -- 登录失败次数统计窗口，单位秒（默认1小时）
+local login_ban_duration = 600         -- 登录失败封禁时长，单位秒（默认10分钟）
+local renew_threshold = 0.3            -- 会话续期阈值（剩余有效期比例，0.3即剩余30%时续期）
 
--- <--- Initialization --->
+-- <--- 初始化 --->
 
 local ipm, ipm_err
 do
     if #ip_whitelist > 0 then
         ipm, ipm_err = ipmatcher.new(ip_whitelist)
         if not ipm then
-            ngx_log(ngx_ERR, "auth-plugin: failed to initialize IP allowlist: ", ipm_err)
+            ngx_log(ngx_ERR, "auth-plugin: 初始化IP白名单失败: ", ipm_err)
         end
     end
 end
 
--- <--- Utility functions --->
+-- <--- 工具函数 --->
 
 local function generate_random_token(length)
     local random_bytes = resty_random.bytes(length)
     if not random_bytes then
-        ngx_log(ngx_ERR, "auth-plugin: unable to generate random token")
+        ngx_log(ngx_ERR, "auth-plugin: 无法生成随机token")
         return nil
     end
     return resty_string.to_hex(random_bytes)
@@ -130,9 +130,9 @@ end
 local function get_login_page(req_uri, error_message, site_name)
     local escaped_error = escape_html(tostring(error_message or ""))
     local form_action = escape_html(tostring(req_uri or "/"))
-    local site_title = site_name and escape_html(site_name) or "Security Verification"
+    local site_title = site_name and escape_html(site_name) or "安全验证"
     return [[<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -170,14 +170,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 <div class="auth-card">
 <div class="auth-header"><div class="auth-title">]] .. site_title .. [[</div></div>
 <div class="auth-body">
-<div class="auth-heading">Please enter your account and password to continue</div>
+<div class="auth-heading">请输入账号密码继续访问</div>
 ]] .. (escaped_error ~= "" and '<div class="error-message">' .. escaped_error .. '</div>' or "") .. [[
 <form method="POST" action="]] .. form_action .. [[" autocomplete="off">
-<div class="form-group"><label class="form-label" for="username">Username</label><input type="text" id="username" name="username" class="form-input" placeholder="Enter username" required autocapitalize="none" autocorrect="off"></div>
-<div class="form-group"><label class="form-label" for="password">Password</label><input type="password" id="password" name="password" class="form-input" placeholder="Enter password" required></div>
-<button type="submit" class="form-submit">Log In</button>
+<div class="form-group"><label class="form-label" for="username">用户名</label><input type="text" id="username" name="username" class="form-input" placeholder="请输入用户名" required autocapitalize="none" autocorrect="off"></div>
+<div class="form-group"><label class="form-label" for="password">密码</label><input type="password" id="password" name="password" class="form-input" placeholder="请输入密码" required></div>
+<button type="submit" class="form-submit">登录</button>
 </form>
-<div class="form-footer"><p class="form-footer-text">This site is protected, please complete identity verification</p></div>
+<div class="form-footer"><p class="form-footer-text">访问受保护，请完成身份验证</p></div>
 </div>
 </div>
 </div>
@@ -278,7 +278,7 @@ local function renew_session_if_needed(session_key, expire_time, session_duratio
         local new_expire = ngx_time() + session_duration
         local ok, err = ngx_kv.db:set(session_key, new_expire, session_duration)
         if not ok then
-            ngx_log(ngx_ERR, "auth-plugin: failed to renew session: ", err or "unknown")
+            ngx_log(ngx_ERR, "auth-plugin: 续期会话失败: ", err or "unknown")
             return expire_time, false
         end
         return new_expire, true
@@ -302,7 +302,7 @@ local function append_set_cookie(cookie_value)
 end
 
 local function block_login_banned_ip(waf)
-    waf.msg = "IP blocked due to too many failed login attempts"
+    waf.msg = "IP因登录失败次数过多已被拦截"
     waf.rule_id = 10001
     waf.deny = true
     ngx_kv.ipBlock:incr(waf.ip, 1, 0)
@@ -310,7 +310,7 @@ local function block_login_banned_ip(waf)
     return true, true
 end
 
--- <--- Main logic --->
+-- <--- 主逻辑 --->
 
 function _M.resp_header_post_filter(waf)
     local renew_cookie = ngx.ctx.auth_plugin_renew_cookie
@@ -344,7 +344,7 @@ function _M.req_post_filter(waf)
     if check_whitelist(host, req_uri) then return end
     if check_header_allowlist(waf, host) then return end
 
-    -- Check the existing session
+    -- 检查已有会话
     local session_cookie = get_cookie_value(waf, cookie_name)
     if session_cookie then
         local session_key = session_prefix .. session_cookie
@@ -376,7 +376,7 @@ function _M.req_post_filter(waf)
         end
     end
 
-    -- Login attempt count check
+    -- 登录尝试次数检查
     local attempts_key = "login_attempts:" .. waf.ip .. ":" .. host
     local ban_key = "login_ban:" .. waf.ip .. ":" .. host
 
@@ -386,15 +386,15 @@ function _M.req_post_filter(waf)
 
     local attempts = ngx_kv.ipCache:get(attempts_key) or 0
 
-    -- POST login handling
+    -- POST 登录处理
     if method == "POST" then
         if validate_login(waf, auth_config) then
             local new_session_id = generate_random_token(32)
             if not new_session_id then
-                ngx_log(ngx_ERR, "auth-plugin: unable to generate session ID")
+                ngx_log(ngx_ERR, "auth-plugin: 无法生成会话ID")
                 ngx.header["Set-Cookie"] = clear_cookie_header(csrf_cookie_name, is_https)
                 ngx.header["Content-Type"] = "text/html; charset=utf-8"
-                ngx_print(get_login_page(req_uri, "The system is busy, please try again later", auth_config.site_name))
+                ngx_print(get_login_page(req_uri, "系统繁忙，请稍后重试", auth_config.site_name))
                 return ngx_exit(ngx.HTTP_OK)
             end
 
@@ -402,10 +402,10 @@ function _M.req_post_filter(waf)
             local expire_time = ngx_time() + session_duration
             local ok, err = ngx_kv.db:set(new_session_key, expire_time, session_duration)
             if not ok then
-                ngx_log(ngx_ERR, "auth-plugin: failed to save session: ", err or "unknown")
+                ngx_log(ngx_ERR, "auth-plugin: 保存会话失败: ", err or "unknown")
                 ngx.header["Set-Cookie"] = clear_cookie_header(csrf_cookie_name, is_https)
                 ngx.header["Content-Type"] = "text/html; charset=utf-8"
-                ngx_print(get_login_page(req_uri, "The system is busy, please try again later", auth_config.site_name))
+                ngx_print(get_login_page(req_uri, "系统繁忙，请稍后重试", auth_config.site_name))
                 return ngx_exit(ngx.HTTP_OK)
             end
             ngx_kv.ipCache:delete(attempts_key)
@@ -425,10 +425,10 @@ function _M.req_post_filter(waf)
         ngx_kv.ipCache:set(attempts_key, attempts, login_attempt_window)
     end
 
-    -- Show the login page
+    -- 显示登录页面
     ngx.header["Set-Cookie"] = clear_cookie_header(csrf_cookie_name, is_https)
     ngx.header["Content-Type"] = "text/html; charset=utf-8"
-    local error_msg = (method == "POST") and "Incorrect username or password" or nil
+    local error_msg = (method == "POST") and "用户名或密码错误" or nil
     ngx_print(get_login_page(req_uri, error_msg, auth_config.site_name))
     return ngx_exit(ngx.HTTP_OK)
 end
