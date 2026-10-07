@@ -14,7 +14,7 @@
 
 > **UUSEC WAF** Web Application Firewall is an industrial grade free, high-performance, and highly scalable web application and API security protection product that supports AI and semantic engines. It is a comprehensive website protection product launched by UUSEC Technology, which first realizes the three-layer defense function of traffic layer, system layer, and runtime layer.
 
-![](http://waf.uusec.com/_media/waf.png)
+![](https://waf.uusec.com/_media/waf.png)
 
 
 

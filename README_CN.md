@@ -9,7 +9,7 @@
 
 > **南墙**WEB应用防火墙（简称：`uuWAF`）一款工业级免费、高性能、高扩展，支持AI和语义引擎的Web应用和API安全防护产品。它是有安科技推出的一款全方位网站防护产品，率先实现了流量层、系统层、运行时层3层纵深防御功能。
 
-![](http://waf.uusec.com/_media/waf.png)
+![](https://waf.uusec.com/_media/waf.png)
 
 🏠安装及使用请访问官网： https://waf.uusec.com/
 
