@@ -1,3 +1,11 @@
+## [7.2.6](https://github.com/Safe3/uusec-waf/compare/v7.2.6...v7.2.5) (2026-10-12)
+
+### 功能更新
+
+- SQL 注入检测增强
+
+
+
 ## [7.2.5](https://github.com/Safe3/uusec-waf/compare/v7.2.5...v7.2.4) (2026-08-05)
 
 ### 问题修复

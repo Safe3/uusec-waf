@@ -1,9 +1,17 @@
+## [7.2.6](https://github.com/Safe3/uusec-waf/compare/v7.2.6...v7.2.5) (2026-10-12)
+
+### Feature Updates:
+
+- SQL injection detection enhancement.
+
+
+
 ## [7.2.5](https://github.com/Safe3/uusec-waf/compare/v7.2.5...v7.2.4) (2026-08-05)
 
 ### Bug Fixes:
 
 - Fix nginx [CVE-2026-42533](https://www.cve.org/CVERecord?id=CVE-2026-42533)  and [CVE-2026-56434](https://www.cve.org/CVERecord?id=CVE-2026-56434)  vulnerabilities.
-- The maximum number of websites allowed in the ‌Community Edition‌ has been adjusted from ‌10‌ to ‌16‌.
+- The maximum number of websites allowed in the ‌Community Edition‌ has been adjusted from 10 to 16.
 
 
 
