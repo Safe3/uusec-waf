@@ -3,6 +3,7 @@
 ### Feature Updates:
 
 - SQL injection detection enhancement.
+- Add the rule for PHP2Shell.
 
 ### Bug Fixes:
 
