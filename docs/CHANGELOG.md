@@ -1,3 +1,16 @@
+## [7.2.7](https://github.com/Safe3/uusec-waf/compare/v7.2.7...v7.2.6) (2026-11-04)
+
+### Feature Updates:
+
+- SQL injection detection enhancement.
+
+### Bug Fixes:
+
+- Fix nginx CVE-2026-15176, CVE-2026-93479, CVE-2026-97629 and CVE-2026-97205 vulnerabilities.
+- Update go version to v1.27.3.
+
+
+
 ## [7.2.6](https://github.com/Safe3/uusec-waf/compare/v7.2.6...v7.2.5) (2026-10-12)
 
 ### Feature Updates:

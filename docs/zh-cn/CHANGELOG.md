@@ -1,3 +1,16 @@
+## [7.2.7](https://github.com/Safe3/uusec-waf/compare/v7.2.7...v7.2.6) (2026-11-04)
+
+### 功能更新
+
+- SQL 注入检测增强
+
+### 问题修复
+
+- 修复 nginx CVE-2026-15176、CVE-2026-93479、CVE-2026-97629 和 CVE-2026-97205 漏洞
+- 升级go版本至1.27.3
+
+
+
 ## [7.2.6](https://github.com/Safe3/uusec-waf/compare/v7.2.6...v7.2.5) (2026-10-12)
 
 ### 功能更新
