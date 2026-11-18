@@ -1,3 +1,16 @@
+## [7.2.8](https://github.com/Safe3/uusec-waf/compare/v7.2.8...v7.2.7) (2026-11-18)
+
+### Feature Updates:
+
+- Implement signature validation for update packages‌.
+
+### Bug Fixes:
+
+- Strengthen the security of certificate application
+- Update go version to v1.27.4.
+
+
+
 ## [7.2.7](https://github.com/Safe3/uusec-waf/compare/v7.2.7...v7.2.6) (2026-11-04)
 
 ### Feature Updates:
